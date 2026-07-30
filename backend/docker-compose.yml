@@ -1,0 +1,12 @@
+name: vehicle-makes-service
+
+services:
+  dynamodb:
+    image: amazon/dynamodb-local:latest
+    container_name: vehicle-makes-dynamodb
+    command: '-jar DynamoDBLocal.jar -sharedDb -dbPath ./data'
+    working_dir: /home/dynamodblocal
+    ports:
+      - '${DYNAMODB_PORT:-8000}:8000'
+    volumes:
+      - './docker/dynamodb:/home/dynamodblocal/data'
