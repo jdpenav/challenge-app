@@ -1,0 +1,17 @@
+node_modules/
+dist/
+coverage/
+logs/
+*.log
+
+.env
+.env.local
+.env.*.local
+
+backend/docker/dynamodb/*
+!backend/docker/dynamodb/.gitkeep
+
+.DS_Store
+.idea/
+*.tsbuildinfo
+/docs
