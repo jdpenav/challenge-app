@@ -1,0 +1,8 @@
+node_modules/
+dist/
+coverage/
+docker/dynamodb/
+package-lock.json
+
+# Documento original del challenge, se conserva tal cual lo enviaron.
+docs/Backend Chanllenge.md
