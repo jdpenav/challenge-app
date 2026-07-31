@@ -8,3 +8,7 @@ export interface VehicleMake {
   makeName: string;
   vehicleTypes: VehicleType[];
 }
+
+export interface VehicleMakeItem extends VehicleMake {
+  ingestedAt: string;
+}
