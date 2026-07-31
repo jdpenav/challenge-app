@@ -1,0 +1,92 @@
+name: CI
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: [main, dev]
+
+defaults:
+  run:
+    working-directory: backend
+
+jobs:
+  quality:
+    name: Lint, typecheck and tests
+    runs-on: ubuntu-latest
+
+    services:
+      dynamodb:
+        image: amazon/dynamodb-local:latest
+        ports:
+          - 8000:8000
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: backend/.nvmrc
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Check formatting
+        run: npm run format:check
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Audit production dependencies
+        run: npm audit --omit=dev --audit-level=high
+
+      - name: Run tests with coverage
+        run: npm run test:coverage
+        env:
+          DYNAMODB_ENDPOINT: http://localhost:8000
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-report
+          path: backend/coverage
+          retention-days: 7
+
+  docker:
+    name: Build Docker image
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Build image
+        run: docker build -t vehicle-makes-service:${{ github.sha }} .
+
+      - name: Verify the service starts and answers the health check
+        run: |
+          docker network create ci-network
+          docker run -d --name dynamodb --network ci-network amazon/dynamodb-local:latest
+          docker run -d --name api --network ci-network -p 3000:3000 \
+            -e DYNAMODB_ENDPOINT=http://dynamodb:8000 \
+            -e AWS_ACCESS_KEY_ID=local \
+            -e AWS_SECRET_ACCESS_KEY=local \
+            -e INGEST_ON_STARTUP=false \
+            vehicle-makes-service:${{ github.sha }}
+
+          for attempt in $(seq 1 20); do
+            if curl -sf http://localhost:3000/health; then
+              echo "Service is healthy"
+              exit 0
+            fi
+            sleep 3
+          done
+
+          echo "Service did not become healthy"
+          docker logs api
+          exit 1

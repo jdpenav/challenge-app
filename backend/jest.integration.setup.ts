@@ -1,0 +1,12 @@
+process.env.NODE_ENV = 'test';
+process.env.LOG_LEVEL = 'error';
+process.env.VPIC_BASE_URL = 'https://vpic.test/api/vehicles';
+process.env.VPIC_TIMEOUT_MS = '2000';
+process.env.VPIC_MAX_RETRIES = '0';
+process.env.DYNAMODB_ENDPOINT = process.env.DYNAMODB_ENDPOINT ?? 'http://localhost:8000';
+process.env.DYNAMODB_TABLE_NAME = 'IntegrationVehicleMakes';
+process.env.AWS_ACCESS_KEY_ID = 'local';
+process.env.AWS_SECRET_ACCESS_KEY = 'local';
+process.env.INGESTION_CONCURRENCY = '3';
+process.env.INGESTION_MAX_MAKES = '0';
+process.env.INGEST_ON_STARTUP = 'false';
