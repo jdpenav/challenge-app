@@ -120,7 +120,8 @@ describe('ingestion to GraphQL end to end', () => {
     const second = await request(app)
       .post('/graphql')
       .send({
-        query: 'query Next($cursor: String) { makes(limit: 2, cursor: $cursor) { items { makeId } } }',
+        query:
+          'query Next($cursor: String) { makes(limit: 2, cursor: $cursor) { items { makeId } } }',
         variables: { cursor: nextCursor },
       })
       .expect(200);

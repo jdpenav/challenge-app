@@ -66,7 +66,7 @@ const envSchema = Joi.object<RawEnv, true>({
   AWS_SECRET_ACCESS_KEY: Joi.string().default('local'),
 
   INGESTION_CONCURRENCY: Joi.number().integer().min(1).max(50).default(10),
-  INGESTION_MAX_MAKES: Joi.number().integer().min(0).default(500),
+  INGESTION_MAX_MAKES: Joi.number().integer().min(0).default(200),
   INGEST_ON_STARTUP: Joi.boolean().default(false),
 }).unknown(true);
 
