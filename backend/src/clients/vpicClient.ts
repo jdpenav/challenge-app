@@ -11,20 +11,42 @@ import { parseXml, toArray } from '../utils/xmlParser';
 
 const RETRY_BASE_DELAY_MS = 300;
 const RETRY_MAX_DELAY_MS = 5_000;
+const RETRY_JITTER_RATIO = 0.3;
 
-type AttemptResult =
-  { ok: true; body: string } | { ok: false; error: ExternalApiError; retryable: boolean };
+// vPIC enforces a request quota per time window and answers 403 once it is exceeded,
+// rather than the conventional 429. Recovering needs a pause long enough for the window
+// to roll over, so throttling gets its own, much slower backoff.
+const THROTTLING_STATUSES = [403, 429];
+const THROTTLE_BASE_DELAY_MS = 3_000;
+const THROTTLE_MAX_DELAY_MS = 30_000;
+
+type AttemptFailure = {
+  ok: false;
+  error: ExternalApiError;
+  retryable: boolean;
+  throttled: boolean;
+};
+
+type AttemptResult = { ok: true; body: string } | AttemptFailure;
 
 function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-function backoffDelay(attempt: number): number {
-  return Math.min(RETRY_BASE_DELAY_MS * 2 ** (attempt - 1), RETRY_MAX_DELAY_MS);
+function backoffDelay(attempt: number, throttled: boolean): number {
+  const base = throttled ? THROTTLE_BASE_DELAY_MS : RETRY_BASE_DELAY_MS;
+  const ceiling = throttled ? THROTTLE_MAX_DELAY_MS : RETRY_MAX_DELAY_MS;
+  const wait = Math.min(base * 2 ** (attempt - 1), ceiling);
+
+  return wait + Math.random() * wait * RETRY_JITTER_RATIO;
+}
+
+function isThrottled(status: number): boolean {
+  return THROTTLING_STATUSES.includes(status);
 }
 
 function isRetryableStatus(status: number): boolean {
-  return status === 408 || status === 429 || status >= 500;
+  return status === 408 || isThrottled(status) || status >= 500;
 }
 
 function unwrapResults<T extends object>(results: T | '' | undefined): T | undefined {
@@ -42,6 +64,7 @@ async function attemptRequest(url: string, context: ErrorContext): Promise<Attem
       return {
         ok: false,
         retryable: isRetryableStatus(response.status),
+        throttled: isThrottled(response.status),
         error: new ExternalApiError(`vPIC responded with status ${response.status}`, {
           context: { ...context, url, status: response.status },
         }),
@@ -53,6 +76,7 @@ async function attemptRequest(url: string, context: ErrorContext): Promise<Attem
     return {
       ok: false,
       retryable: true,
+      throttled: false,
       error: new ExternalApiError('vPIC request could not be completed', {
         cause: toError(error),
         context: { ...context, url },
@@ -78,6 +102,7 @@ async function requestXml(path: string, context: ErrorContext): Promise<string> 
       errorName: cause.name,
       attempt,
       totalAttempts,
+      throttled: result.throttled,
       ...result.error.context,
     });
 
@@ -85,7 +110,7 @@ async function requestXml(path: string, context: ErrorContext): Promise<string> 
       throw result.error;
     }
 
-    await delay(backoffDelay(attempt));
+    await delay(backoffDelay(attempt, result.throttled));
   }
 }
 

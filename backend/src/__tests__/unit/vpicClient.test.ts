@@ -81,9 +81,7 @@ describe('fetchVehicleTypesByMakeId', () => {
 
 describe('retry behaviour', () => {
   it('retries a 503 and succeeds on a later attempt', async () => {
-    fetchMock
-      .mockResolvedValueOnce(failure(503))
-      .mockResolvedValueOnce(ok(vehicleTypesXml));
+    fetchMock.mockResolvedValueOnce(failure(503)).mockResolvedValueOnce(ok(vehicleTypesXml));
 
     const types = await fetchVehicleTypesByMakeId('440');
 
@@ -105,11 +103,51 @@ describe('retry behaviour', () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
+  it('retries a 403, which is how vPIC signals throttling', async () => {
+    jest.useFakeTimers();
+    fetchMock.mockResolvedValueOnce(failure(403)).mockResolvedValueOnce(ok(allMakesXml));
+
+    const pending = fetchAllMakes();
+    await jest.runAllTimersAsync();
+    const makes = await pending;
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(makes).toHaveLength(3);
+    jest.useRealTimers();
+  });
+
+  it('backs off for longer when throttled than on an ordinary retry', async () => {
+    jest.useFakeTimers();
+    const timeoutSpy = jest.spyOn(global, 'setTimeout');
+
+    fetchMock.mockResolvedValueOnce(failure(503)).mockResolvedValueOnce(ok(allMakesXml));
+    let pending = fetchAllMakes();
+    await jest.runAllTimersAsync();
+    await pending;
+    const ordinaryDelay = Number(timeoutSpy.mock.calls[0]?.[1]);
+
+    timeoutSpy.mockClear();
+    fetchMock.mockResolvedValueOnce(failure(403)).mockResolvedValueOnce(ok(allMakesXml));
+    pending = fetchAllMakes();
+    await jest.runAllTimersAsync();
+    await pending;
+    const throttledDelay = Number(timeoutSpy.mock.calls[0]?.[1]);
+
+    expect(throttledDelay).toBeGreaterThan(ordinaryDelay);
+    timeoutSpy.mockRestore();
+    jest.useRealTimers();
+  });
+
   it('retries a 429 until the attempts are exhausted', async () => {
+    jest.useFakeTimers();
     fetchMock.mockResolvedValue(failure(429));
 
-    await expect(fetchAllMakes()).rejects.toThrow(ExternalApiError);
+    const pending = expect(fetchAllMakes()).rejects.toThrow(ExternalApiError);
+    await jest.runAllTimersAsync();
+    await pending;
+
     expect(fetchMock).toHaveBeenCalledTimes(3);
+    jest.useRealTimers();
   });
 
   it('retries network failures and preserves the original cause', async () => {
