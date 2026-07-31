@@ -1,3 +1,4 @@
+import type { Server } from 'node:http';
 import { createApp } from './app';
 import { config } from './config';
 import { closeDynamoClient, ensureTableExists } from './config/dynamo';
@@ -7,6 +8,9 @@ import { logger } from './utils/logger';
 
 const SHUTDOWN_TIMEOUT_MS = 10_000;
 
+let server: Server | undefined;
+let shuttingDown = false;
+
 function logFailure(error: unknown): void {
   const cause = toError(error);
   logger.error(cause.message, {
@@ -15,16 +19,6 @@ function logFailure(error: unknown): void {
     stack: cause.stack,
   });
 }
-
-const server = createApp().listen(config.server.port, () => {
-  logger.info('Service started', {
-    port: config.server.port,
-    env: config.env,
-    nodeVersion: process.version,
-  });
-
-  void bootstrapData();
-});
 
 async function bootstrapData(): Promise<void> {
   try {
@@ -37,10 +31,8 @@ async function bootstrapData(): Promise<void> {
   }
 }
 
-let shuttingDown = false;
-
 function shutdown(signal: string): void {
-  if (shuttingDown) {
+  if (shuttingDown || !server) {
     return;
   }
   shuttingDown = true;
@@ -66,6 +58,20 @@ function shutdown(signal: string): void {
   });
 }
 
+async function start(): Promise<void> {
+  const app = await createApp();
+
+  server = app.listen(config.server.port, () => {
+    logger.info('Service started', {
+      port: config.server.port,
+      env: config.env,
+      nodeVersion: process.version,
+    });
+
+    void bootstrapData();
+  });
+}
+
 process.on('SIGTERM', () => shutdown('SIGTERM'));
 process.on('SIGINT', () => shutdown('SIGINT'));
 
@@ -74,6 +80,11 @@ process.on('unhandledRejection', (reason) => {
 });
 
 process.on('uncaughtException', (error) => {
+  logFailure(error);
+  process.exit(1);
+});
+
+start().catch((error: unknown) => {
   logFailure(error);
   process.exit(1);
 });
