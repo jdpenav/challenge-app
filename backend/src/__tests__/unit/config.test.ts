@@ -13,7 +13,7 @@ describe('loadConfig defaults', () => {
     expect(config.vpic.baseUrl).toBe('https://vpic.nhtsa.dot.gov/api/vehicles');
     expect(config.dynamo.tableName).toBe('VehicleMakes');
     expect(config.ingestion.concurrency).toBe(10);
-    expect(config.ingestion.maxMakes).toBe(500);
+    expect(config.ingestion.maxMakes).toBe(200);
     expect(config.ingestion.runOnStartup).toBe(false);
   });
 
@@ -39,7 +39,9 @@ describe('loadConfig defaults', () => {
   });
 
   it('treats an empty DynamoDB endpoint as undefined so the AWS default chain applies', () => {
-    expect(loadConfig({ DYNAMODB_ENDPOINT: '' } as NodeJS.ProcessEnv).dynamo.endpoint).toBeUndefined();
+    expect(
+      loadConfig({ DYNAMODB_ENDPOINT: '' } as NodeJS.ProcessEnv).dynamo.endpoint,
+    ).toBeUndefined();
   });
 
   it('ignores unrelated environment variables', () => {
