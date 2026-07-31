@@ -22,11 +22,14 @@
     "test:coverage": "jest --coverage --passWithNoTests"
   },
   "dependencies": {
+    "@apollo/server": "^5.5.1",
+    "@as-integrations/express5": "^1.1.2",
     "@aws-sdk/client-dynamodb": "^3.1100.0",
     "@aws-sdk/lib-dynamodb": "^3.1100.0",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "fast-xml-parser": "^5.10.1",
+    "graphql": "^16.14.2",
     "joi": "^18.2.3",
     "winston": "^3.19.0"
   },
