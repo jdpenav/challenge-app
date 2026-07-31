@@ -11,7 +11,10 @@ export function resolvePageSize(limit?: number | null): number {
   return Math.min(Math.max(Math.trunc(limit), 1), MAX_PAGE_SIZE);
 }
 
-export function listMakes(limit?: number | null, cursor?: string | null): Promise<Page<VehicleMakeItem>> {
+export function listMakes(
+  limit?: number | null,
+  cursor?: string | null,
+): Promise<Page<VehicleMakeItem>> {
   return findAll(resolvePageSize(limit), cursor ?? undefined);
 }
 

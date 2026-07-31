@@ -41,9 +41,21 @@ describe('runIngestion', () => {
     expect(summary).toMatchObject({ available: 3, selected: 3, persisted: 3, failed: 0 });
     expect(saveMany).toHaveBeenCalledTimes(1);
     expect(saveMany.mock.calls[0]?.[0]).toEqual([
-      { makeId: '0', makeName: 'MAKE 0', vehicleTypes: [{ typeId: '2', typeName: 'Passenger Car' }] },
-      { makeId: '1', makeName: 'MAKE 1', vehicleTypes: [{ typeId: '2', typeName: 'Passenger Car' }] },
-      { makeId: '2', makeName: 'MAKE 2', vehicleTypes: [{ typeId: '2', typeName: 'Passenger Car' }] },
+      {
+        makeId: '0',
+        makeName: 'MAKE 0',
+        vehicleTypes: [{ typeId: '2', typeName: 'Passenger Car' }],
+      },
+      {
+        makeId: '1',
+        makeName: 'MAKE 1',
+        vehicleTypes: [{ typeId: '2', typeName: 'Passenger Car' }],
+      },
+      {
+        makeId: '2',
+        makeName: 'MAKE 2',
+        vehicleTypes: [{ typeId: '2', typeName: 'Passenger Car' }],
+      },
     ]);
   });
 

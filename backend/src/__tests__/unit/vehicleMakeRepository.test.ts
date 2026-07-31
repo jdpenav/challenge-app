@@ -1,4 +1,9 @@
-import { BatchWriteCommand, DynamoDBDocumentClient, GetCommand, ScanCommand } from '@aws-sdk/lib-dynamodb';
+import {
+  BatchWriteCommand,
+  DynamoDBDocumentClient,
+  GetCommand,
+  ScanCommand,
+} from '@aws-sdk/lib-dynamodb';
 import { mockClient } from 'aws-sdk-client-mock';
 import type { VehicleMake } from '../../models/vehicle';
 import { findAll, findById, saveMany } from '../../repositories/vehicleMakeRepository';
@@ -44,9 +49,8 @@ describe('saveMany', () => {
 
     await saveMany(makes(1), INGESTED_AT);
 
-    const request = dynamoMock.commandCalls(BatchWriteCommand)[0]?.args[0].input.RequestItems?.[
-      TABLE
-    ]?.[0];
+    const request =
+      dynamoMock.commandCalls(BatchWriteCommand)[0]?.args[0].input.RequestItems?.[TABLE]?.[0];
     expect(request?.PutRequest?.Item).toEqual({
       makeId: 'make-0',
       makeName: 'MAKE 0',
