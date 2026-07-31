@@ -75,8 +75,6 @@ Apollo enforces as CSRF protection. Use `POST`.
 | `items`      | `[VehicleMake!]!` | Makes in this page                               |
 | `nextCursor` | `String`          | Cursor for the next page, `null` on the last one |
 
-
-
 ## Errors
 
 Errors arrive in an `errors` array, each with a code in `extensions.code`. Stack traces
@@ -121,4 +119,3 @@ Corrupt cursor:
 
 Argument validation comes from the schema itself, so wrong types are rejected before any
 resolver runs. There is no extra validation layer on this path.
-
