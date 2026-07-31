@@ -6,6 +6,7 @@
     "moduleResolution": "node16",
     "rootDir": "src",
     "outDir": "dist",
+    "types": ["node", "jest"],
     "strict": true,
     "noUncheckedIndexedAccess": true,
     "noImplicitOverride": true,
@@ -13,6 +14,7 @@
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
+    "isolatedModules": true,
     "skipLibCheck": true,
     "sourceMap": true
   },

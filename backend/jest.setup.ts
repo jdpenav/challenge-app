@@ -1,0 +1,9 @@
+process.env.NODE_ENV = 'test';
+process.env.LOG_LEVEL = 'error';
+process.env.VPIC_BASE_URL = 'https://vpic.test/api/vehicles';
+process.env.VPIC_TIMEOUT_MS = '1000';
+process.env.VPIC_MAX_RETRIES = '2';
+process.env.DYNAMODB_TABLE_NAME = 'TestVehicleMakes';
+process.env.INGESTION_CONCURRENCY = '5';
+process.env.INGESTION_MAX_MAKES = '0';
+process.env.INGEST_ON_STARTUP = 'false';
