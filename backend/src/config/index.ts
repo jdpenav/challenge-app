@@ -61,7 +61,7 @@ const envSchema = Joi.object<RawEnv, true>({
 
   DYNAMODB_ENDPOINT: Joi.string().uri().allow('').default('http://localhost:8000'),
   DYNAMODB_REGION: Joi.string().default('us-east-1'),
-  DYNAMODB_TABLE_NAME: Joi.string().default('vehicle_makes'),
+  DYNAMODB_TABLE_NAME: Joi.string().default('VehicleMakes'),
   AWS_ACCESS_KEY_ID: Joi.string().default('local'),
   AWS_SECRET_ACCESS_KEY: Joi.string().default('local'),
 
